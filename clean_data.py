@@ -69,5 +69,5 @@ tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 morph = pymorphy2.MorphAnalyzer()
 current_dir = "Authors"
 
-cl = CleanText(current_dir, tokenizer)
+cl = CleanText(current_dir, tokenizer, normalize=morph)
 cl.run()
