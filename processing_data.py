@@ -183,7 +183,7 @@ class Processing:
                 new_line.append(''.join(struct))
         return new_line
 
-    def run(self, path_source, path_result):
+    def run_rw_file(self, path_source, path_result):
         print("Processing...")
         files = os.listdir(path_source)
         for file in files:
@@ -199,5 +199,20 @@ class Processing:
                     line_replace = ' '.join(new_line)
                     out.write(line_replace + '\n')
 
-a = Processing('ruwikiruscorpora_0_300_20.bin')
-a.run('books_before/', 'books_result/')
+    def run(self, in_data):
+        print("Processing...")
+        new_line = []
+        line = in_data.strip()
+        words = line.split()
+        self.__words_parse(words, new_line)
+        return ' '.join(new_line)
+
+
+def main():
+    model = Processing('ruwikiruscorpora_0_300_20.bin')
+    while True:
+        s = str(input())
+        print(model.run(s))
+
+if __name__ == "__main__":
+    main()
