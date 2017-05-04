@@ -19,3 +19,7 @@ python.stdout.on('data', (data) => {
 document.getElementById('async-msg').addEventListener('click', function(e) {
 	python.stdin.write(input.value + "\n");
 });
+
+document.getElementById('exit').addEventListener('click', function() {
+	python.stdin.end();
+});
