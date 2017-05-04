@@ -3,6 +3,8 @@ import re
 import gensim
 import pymorphy2
 import logging
+import json
+
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
@@ -31,6 +33,7 @@ class Processing:
     def __search_neighbour(self, word, pos, gend='masc'):
         word = word.replace('ё', 'е')
         lex = word + '_' + self.cotags[pos]
+        result = []
         if lex in self.model:
             neighbs = self.model.most_similar([lex], topn=20)
             for nei in neighbs:
@@ -43,16 +46,14 @@ class Processing:
                         for ana in parse_word:
                             if ana.normal_form == lex_n:
                                 if ana.tag.gender == gend:
-                                    return lex_n
+                                    result.append(lex_n)
                     elif self.cotags[pos] == 'VERB' and word[-2:] == 'ся':
                         if lex_n[-2:] == 'ся':
-                            return lex_n
+                            result.append(lex_n)
                         elif self.cotags[pos] == 'VERB' and word[-2:] != 'ся':
                             if lex_n[-2:] != 'ся':
-                                return lex_n
-                            else:
-                                return lex_n
-        return None
+                                result.append(lex_n)
+        return result
 
     def __flection(self, lex_neighb, tags):
         tags = str(tags)
@@ -85,7 +86,7 @@ class Processing:
                 return word_to_replace
         return None
 
-    def __parse_tags(self, struct, word, new_line, parse_word, capit_flag):
+    def __parse_tags(self, struct, word, alternatives, parse_word, capit_flag):
         pos_flag = 0
         for tg in self.cotags:
             if tg in parse_word.tag:
@@ -102,67 +103,66 @@ class Processing:
                         lex_neighb = self.__search_neighbour(lex, pos_tag)
                     self.cash_neighb[(lex, pos_tag)] = lex_neighb
                 if not lex_neighb:
-                    new_line.append(word)
+                    alternatives.append(word)
                     break
                 else:
                     if pos_tag == 'NOUN':
                         if parse_word.tag.case == 'nomn' and parse_word.tag.number == 'sing':
                             if capit_flag == 1:
-                                lex_neighb = lex_neighb.capitalize()
-                            new_line.append(struct[0] + lex_neighb + struct[2])
+                                lex_neighb = [n.capitalize() for n in lex_neighb]
+                            alternatives = [struct[0] + n + struct[2] for n in lex_neighb]
                         else:
-                            word_to_replace = self.__flection(lex_neighb, parse_word.tag)
-                            if word_to_replace:
-                                if capit_flag == 1:
-                                    word_to_replace = word_to_replace.capitalize()
-                                new_line.append(struct[0] + word_to_replace + struct[2])
-                            else:
-                                new_line.append(word)
+                            for n in lex_neighb:
+                                word_to_replace = self.__flection(n, parse_word.tag)
+                                if word_to_replace:
+                                    if capit_flag == 1:
+                                        word_to_replace = word_to_replace.capitalize()
+                                    alternatives.append(struct[0] + word_to_replace + struct[2])
+                                else:
+                                    alternatives.append(word)
                     elif pos_tag == 'ADJF':
                         if parse_word.tag.case == 'nomn' and parse_word.tag.number == 'sing':
                             if capit_flag == 1:
-                                lex_neighb = lex_neighb.capitalize()
-                            new_line.append(struct[0] + lex_neighb + struct[2])
+                                lex_neighb = [n.capitalize() for n in lex_neighb]
+                            alternatives = [struct[0] + n + struct[2] for n in lex_neighb]
                         else:
-                            word_to_replace = self.__flection(lex_neighb, parse_word.tag)
+                            for n in lex_neighb:
+                                word_to_replace = self.__flection(n, parse_word.tag)
+                                if word_to_replace:
+                                    if capit_flag == 1:
+                                        word_to_replace = word_to_replace.capitalize()
+                                    alternatives.append(struct[0] + word_to_replace + struct[2])
+                                else:
+                                    alternatives.append(word)
+                    elif pos_tag in ['INFN', 'ADVB', 'COMP', 'PRED']:
+                        if capit_flag == 1:
+                            lex_neighb = [n.capitalize() for n in lex_neighb]
+                        alternatives = [struct[0] + n + struct[2] for n in lex_neighb]
+
+                    else:
+                        for n in lex_neighb:
+                            word_to_replace = self.__flection(n, parse_word.tag)
                             if word_to_replace:
                                 if capit_flag == 1:
                                     word_to_replace = word_to_replace.capitalize()
-                                new_line.append(struct[0] + word_to_replace + struct[2])
+                                alternatives.append(struct[0] + word_to_replace + struct[2])
                             else:
-                                new_line.append(word)
-                    elif pos_tag == 'INFN':
-                        if capit_flag == 1:
-                            lex_neighb = lex_neighb.capitalize()
-                        new_line.append(struct[0] + lex_neighb + struct[2])
-                    elif pos_tag in ['ADVB', 'COMP', 'PRED']:
-                        if capit_flag == 1:
-                            lex_neighb = lex_neighb.capitalize()
-                        new_line.append(struct[0] + lex_neighb + struct[2])
-
-                    else:
-                        word_to_replace = self.__flection(lex_neighb, parse_word.tag)
-                        if word_to_replace:
-                            if capit_flag == 1:
-                                word_to_replace = word_to_replace.capitalize()
-                            new_line.append(struct[0] + word_to_replace + struct[2])
-                        else:
-                            new_line.append(word)
+                                alternatives.append(word)
                 break
-        return new_line, pos_flag
+        return alternatives, pos_flag
 
-    def __words_parse(self, words, new_line):
+    def __words_parse(self, words, alternatives):
         for word in words:
             struct = self.punct.findall(word)
             if struct:
                 struct = struct[0]
             else:
-                new_line.append(word)
+                alternatives.append([word])
                 continue
             word_form = struct[1]
             if word_form:
                 if self.capit.search(word_form):
-                    new_line.append(word)
+                    alternatives.append([word])
                     continue
                 else:
                     if word_form[0] in self.capit_letters:
@@ -171,20 +171,22 @@ class Processing:
                         capit_flag = 0
                 parse_word = self.morph.parse(word_form)[0]
                 if 'Name' in parse_word.tag or 'Patr' in parse_word.tag:
-                    new_line.append(word)
+                    alternatives.append([word])
                     continue
                 if parse_word.normal_form == 'глава':
-                    new_line.append(word)
+                    alternatives.append([word])
                     continue
-                new_line, pos_flag = self.__parse_tags(struct, word, new_line, parse_word, capit_flag)
+                new_alternatives = []
+                new_alternatives, pos_flag = self.__parse_tags(struct, word, new_alternatives, parse_word, capit_flag)
                 if pos_flag == 0:
-                    new_line.append(word)
+                    alternatives.append([word])
+                else:
+                    alternatives.append(new_alternatives)
             else:
-                new_line.append(''.join(struct))
-        return new_line
+                alternatives.append([''.join(struct)])
+        return alternatives
 
     def run_rw_file(self, path_source, path_result):
-        print("Processing...")
         files = os.listdir(path_source)
         for file in files:
             print("Parse file: {}".format(file))
@@ -200,19 +202,27 @@ class Processing:
                     out.write(line_replace + '\n')
 
     def run(self, in_data):
-        print("Processing...")
         new_line = []
         line = in_data.strip()
         words = line.split()
-        self.__words_parse(words, new_line)
-        return ' '.join(new_line)
+        return self.__words_parse(words, new_line)
 
 
-def main():
-    model = Processing('ruwikiruscorpora_0_300_20.bin')
-    while True:
-        s = str(input())
-        print(model.run(s))
+def unique_top5(top):
+    used = set()
+    result = []
+    for t in top:
+        if t not in used:
+            result.append(t)
+            used.add(t)
+        if len(result) == 5:
+            break
+    return result
 
-if __name__ == "__main__":
-    main()
+model = Processing('../semantic_search/data/ruwikiruscorpora.bin.gz')
+while True:
+    s = str(input())
+    result = model.run(s)
+    result = [unique_top5(alt) for alt in result]
+    answer = json.dumps(result)
+    print(answer)

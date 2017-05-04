@@ -2,7 +2,7 @@
 
 const spawn = require('child_process').spawn;
 
-const python = spawn('python', ['example.py']);
+const python = spawn('python', ['../processing_data.py']);
 
 var exec = require('child_process').exec
 function execute(command, callback) {
@@ -13,7 +13,7 @@ const input = document.getElementById('input');
 const output = document.getElementById('output');
 
 python.stdout.on('data', (data) => {
-	output.value = data;
+	output.value = JSON.parse(data);
 });
 
 document.getElementById('async-msg').addEventListener('click', function(e) {
