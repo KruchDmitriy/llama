@@ -219,7 +219,7 @@ def unique_top5(top):
             break
     return result
 
-model = Processing('../semantic_search/data/ruwikiruscorpora.bin.gz')
+model = Processing('../models/model.bin.gz')
 while True:
     s = str(input())
     result = model.run(s)

@@ -8,7 +8,7 @@ import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',\
     level=logging.INFO)
 
-model = gensim.models.KeyedVectors.load_word2vec_format('ruwikiruscorpora_0_300_20.bin', binary=True)
+model = gensim.models.KeyedVectors.load_word2vec_format('../models/model.bin.gz', binary=True)
 model.init_sims(replace=True)
 
 
@@ -206,4 +206,4 @@ def main():
         s = str(input())
         print(run(s))
 
-main()         
+main()
