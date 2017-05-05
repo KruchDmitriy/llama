@@ -1,0 +1,3 @@
+[submodule "wikiteam"]
+	path = wikiteam
+	url = https://github.com/WikiTeam/wikiteam.git
