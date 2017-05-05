@@ -6,7 +6,7 @@ const input = document.getElementById('input');
 var counter = 0;
 
 const spawn = require('child_process').spawn;
-const python = spawn('python', ['processing_text.py']);
+const python = spawn('python3', ['processing_text.py']);
 
 getNewTimelineBlock = function(type, data) {
     var li = document.createElement('li');
