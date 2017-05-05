@@ -2,6 +2,7 @@
 const electron = require('electron');
 
 const app = electron.app;
+// const python = require('./app.js').python;
 
 // adds debug features like hotkeys for triggering dev tools and reload
 require('electron-debug')();
@@ -17,9 +18,8 @@ function onClosed() {
 
 function createMainWindow() {
 	const win = new electron.BrowserWindow({
-		width: 600,
-		height: 400,
-		resizable: false
+		width: 1024,
+		height: 768,
 	});
 
 	win.loadURL(`file://${__dirname}/index.html`);
