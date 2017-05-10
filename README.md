@@ -9,3 +9,9 @@
 3. `cd ui` and execute `npm install`.
 4. Run `npm start`.
 5. That's all, have fun!
+
+# Video
+[YouTube](https://www.youtube.com/watch?v=BPmkYCm7h78)
+
+# Presentation
+[Link](https://drive.google.com/open?id=0B1Xio1gViu12QUlOZGk3TGtPQkU)

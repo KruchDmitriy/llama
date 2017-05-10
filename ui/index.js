@@ -2,7 +2,6 @@
 const electron = require('electron');
 
 const app = electron.app;
-// const python = require('./app.js').python;
 
 // adds debug features like hotkeys for triggering dev tools and reload
 require('electron-debug')();
